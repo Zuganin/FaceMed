@@ -6,6 +6,7 @@ package predict;
 service PredictDisease {
   // Метод Detect принимает изображение и возвращает список обнаруженных объектов
   rpc DetectDisease (ImageRequest) returns (DetectionResponse);
+  rpc DetectAge (ImageRequest) returns (DetectionResponse);
 }
 
 // Сообщение, содержащее изображение, закодированное в байтах
