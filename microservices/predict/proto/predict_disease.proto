@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package predict;
+
+// Сервис для детекции объектов с помощью модели YOLO
+service PredictDisease {
+  // Метод Detect принимает изображение и возвращает список обнаруженных объектов
+  rpc DetectDisease (ImageRequest) returns (DetectionResponse);
+}
+
+// Сообщение, содержащее изображение, закодированное в байтах
+message ImageRequest {
+  bytes image_data = 1;
+}
+
+// Сообщение, содержащее результаты детекции (список обнаруженных объектов)
+message DetectionResponse {
+  bytes image = 1;
+  string report = 2;
+}
+
