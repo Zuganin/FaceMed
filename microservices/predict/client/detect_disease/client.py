@@ -2,8 +2,8 @@
 import grpc
 
 from bot.config import logger
-from microservices.predict.proto import predict_disease_pb2
-from microservices.predict.proto import predict_disease_pb2_grpc
+from microservices.predict.proto.proto_disease import predict_disease_pb2
+from microservices.predict.proto.proto_disease import predict_disease_pb2_grpc
 
 
 def get_predict(image_path):
