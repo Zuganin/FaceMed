@@ -2,8 +2,8 @@
 import grpc
 
 from bot.config import logger
-from microservices.predict.proto  import predict_disease_pb2
-from microservices.predict.proto import predict_disease_pb2_grpc
+from microservices.predict.proto.proto_disease  import predict_disease_pb2
+from microservices.predict.proto.proto_disease import predict_disease_pb2_grpc
 
 from .model import *
 
@@ -17,13 +17,12 @@ class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
             logger.info("Сервер успешно получил изображение")
             results = get_predict(self.model, request.image_data)
 
+            logger.info("Формирование аннотированного изображения и отчета")
+            annotated_bytes = get_annotation(results)
             # Обработка результатов
             if len(results[0]) == 0:
                 logger.info("Модель не обнаружила никаких симптомов")
-                return predict_disease_pb2.DetectionResponse(image=request.image, report="Объекты не обнаружены")
-
-            logger.info("Формирование аннотированного изображения и отчета")
-            annotated_bytes = get_annotation(results)
+                return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report="Не обнаружено никаких видимых симптомов!")
             report = get_report(results)
 
             return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report=report)

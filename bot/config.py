@@ -10,7 +10,14 @@ dotenv_path = '.env'
 load_dotenv(dotenv_path=dotenv_path)
 
 TOKEN = os.environ.get('BOT_TOKEN')
-# TOKEN = "7146359839:AAEVLnL677SrVoxSB0Q9-xA7KmKdnxu7YtM"
 bot = Bot(token=TOKEN)
 
 logger = get_logger("general")
+
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASS")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+
+DB_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"

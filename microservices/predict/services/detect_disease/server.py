@@ -1,14 +1,14 @@
 import grpc
 from concurrent import futures
-import time
+
 
 from bot.config import logger
-from microservices.predict.proto import predict_disease_pb2_grpc
-from microservices.predict.services.predict_service import PredictDiseaseServicer
+from microservices.predict.proto.proto_disease import predict_disease_pb2_grpc
+from microservices.predict.services.detect_disease.predict_service import PredictDiseaseServicer
 
 
 
-class Server:
+class Server_disease:
     def __init__(self):
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         predict_disease_pb2_grpc.add_PredictDiseaseServicer_to_server(PredictDiseaseServicer(), self.server)
@@ -27,7 +27,7 @@ class Server:
         self.server.stop(grace=False)
         logger.info("gRPC сервер остановлен")
 
-def run_server(server_instance):
+def run_server_disease(server_instance):
     server_instance.start()
     server_instance.wait()
 
