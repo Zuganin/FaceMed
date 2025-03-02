@@ -22,10 +22,10 @@ class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
             # Обработка результатов
             if len(results[0]) == 0:
                 logger.info("Модель не обнаружила никаких симптомов")
-                return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report="Не обнаружено никаких видимых симптомов!")
+                return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report="Не обнаружено никаких видимых симптомов!", disease="None")
             report = get_report(results)
-
-            return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report=report)
+            disease = get_disease(results)
+            return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report=report, disease=disease)
 
         except Exception as e:
             # Логируем ошибку

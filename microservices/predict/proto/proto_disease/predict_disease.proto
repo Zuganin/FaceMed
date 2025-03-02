@@ -17,5 +17,6 @@ message ImageRequest {
 message DetectionResponse {
   bytes image = 1;
   string report = 2;
+  string disease = 3;
 }
 

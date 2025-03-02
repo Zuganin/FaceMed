@@ -52,3 +52,15 @@ def get_report(results):
         report += f"{i}. {name}: {count} шт.\n"
     logger.debug(f"Отчет сформирован")
     return report
+def get_disease(results):
+    # Получаем статистику по классам
+    class_ids = results[0].boxes.cls.cpu().numpy().astype(int)
+    class_names = [results[0].names[id] for id in class_ids]
+    class_counts = Counter(class_names)
+
+    # Формируем отчет заболеваний для базы данных
+    disease = ""
+    for i, (name, count) in enumerate(class_counts.items(), 1):
+        disease += f"{name} : {count}\n"
+    logger.debug(f"Заболевания сформированы")
+    return disease

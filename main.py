@@ -13,7 +13,6 @@ import nest_asyncio
 dp = Dispatcher(bot = bot)
 
 async def main():
-
     # Запускаем бота
     dp.include_routers(router_analyzer,router_handler )
     logger.info("✅ Бот запущен")

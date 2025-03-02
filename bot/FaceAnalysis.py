@@ -9,6 +9,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram import Router
 
 from bot.config import bot, logger
+from database.database_utils import add_user_diagnostic
 from microservices.predict.services.detect_disease.server import Server_disease, run_server_disease
 from microservices.predict.services.predict_age.server import Server_age, run_server_age
 from microservices.predict.client.detect_disease import client as client_disease
@@ -30,7 +31,7 @@ photoProcessingCommands = InlineKeyboardMarkup(inline_keyboard=[
 #======================================================================================================================#
 @router_analyzer.message(F.photo)
 async def handle_photo(message: types.Message, state: FSMContext):
-    photo_path = f"{message.from_user.id}_photo.jpg"
+    photo_path = f"{message.from_user.username}_photo.jpg"
     logger.info(f"Пользователь {message.from_user.full_name} отправил фото {photo_path}")
     try:
         # Скачиваем фото
@@ -60,7 +61,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
 async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
-    result_path = f"{callback.from_user.id}_result.jpg"
+    result_path = f"{callback.from_user.username}_result.jpg"
 
     if not photo_path:
         logger.error(f"🆘 Произошло ошибка при анализе возраста. Возможно фото не было загружено.")
@@ -111,7 +112,7 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
 async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
-    result_path = f"{callback.from_user.id}_diagnosis_result.jpg"
+    result_path = f"{callback.from_user.username}_diagnosis_result.jpg"
 
     if not photo_path:
         logger.error(f"🆘 Произошло ошибка при анализе возраста. Возможно фото не было загружено.")
@@ -131,7 +132,7 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
         server_instance.stop()
 
         # Загрузка результата в базу данных
-
+        await add_user_diagnostic(callback.from_user.username, result_path, annotated_photo, results.disease)
 
         # Отправка результата
         await callback.message.answer_photo(
