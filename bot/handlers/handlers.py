@@ -8,6 +8,10 @@ from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import StateFilter
 
+from sqlalchemy.future import select
+
+from database.engine import session_maker
+from database.models import Users
 from bot.config import logger
 
 
@@ -28,6 +32,8 @@ class RegistrationStates(StatesGroup):
     waiting_for_gender = State()
 router_handler = Router()
 
+#======================================================================================================================#
+
 @router_handler.message(CommandStart())
 async def start(message: Message):
     await message.answer("Привет! Я бот, созданный для проведения экспресс диагностики твоего здоровья."
@@ -39,11 +45,25 @@ async def help(message: Message):
     await message.answer("Пришлите мне свое фото анфанс (лицом к камере) и выберите желаемые действия!", reply_markup=replyCommands)
     logger.info(f"Пользователь {message.from_user.full_name} запросил помощь")
 
+#======================================================================================================================#
 
 # Обработчик команды /register - старт регистрации
 @router_handler.message(Command('registration'))
 async def cmd_register(message: Message, state: FSMContext):
-    logger.info(f"Пользователь {message.from_user.full_name} начал регистрацию")
+    # Проверяем, зарегистрирован ли пользователь
+    async with session_maker() as session:
+        try:
+            stmt = select(Users).where(Users.username == message.from_user.username)
+            result = await session.execute(stmt)
+            existing_user = result.scalars().first()
+            if existing_user:
+                await message.answer("Вы уже зарегистрированы!")
+                return
+        except Exception as e:
+            logger.error(f"🆘 Ошибка при проверке пользователя: {e}")
+            await message.answer("Произошла ошибка при проверке пользователя. Попробуйте позже.")
+            return
+    logger.info(f"Пользователь {message.from_user.full_name} - {message.from_user.username} начал регистрацию")
     prompt_message = await message.answer("Введите ваше имя:")
     await state.update_data(prompt_message_id=prompt_message.message_id)
     await state.set_state(RegistrationStates.waiting_for_name)
@@ -107,7 +127,6 @@ async def skip_age(callback_query: types.CallbackQuery, state: FSMContext):
 @router_handler.message(StateFilter(RegistrationStates.waiting_for_age))
 async def process_age(message: Message, state: FSMContext):
     data = await state.get_data()
-    error_msg_id = None
     if not message.text.isdigit():
         logger.info(f"🆘️ Пользователь {message.from_user.full_name} ввёл некорректный возраст: {message.text}")
         error_msg_id = data.get("error_age_msg_id")
@@ -151,22 +170,21 @@ async def process_gender(callback_query: CallbackQuery, state: FSMContext):
     logger.info(f"✅ Пользователь {callback_query.from_user.full_name} успешно ввёл пол: {gender=}")
     await state.update_data(gender=gender)
 
-    # Получаем все данные, введённые пользователем
     data = await state.get_data()
 
-    # Позже сделаю нормальное сохранение в БД
-    # # Сохраняем данные в базу данных
-    # async with async_session() as session:
-    #     async with session.begin():
-    #         new_user = Users(
-    #             name=data['name'],
-    #             surname=data['surname'],
-    #             username=data['username'],
-    #             age=data.get('age'),
-    #             gender=data.get('gender')
-    #         )
-    #         session.add(new_user)
-    #     # При использовании session.begin() commit выполняется автоматически
+    # Сохраняем данные в базу данных
+    async with session_maker() as session:
+        async with session.begin():
+            new_user = Users(
+                name=data['name'],
+                surname=data['surname'],
+                username=callback_query.from_user.username,
+                age=data.get('age'),
+                gender=data.get('gender')
+            )
+            session.add(new_user)
+            # Фиксируем изменения в базе данных
+        logger.debug("Данные успешно загружены в базу")
 
     prompt_message_id = data.get("prompt_message_id")
     await callback_query.bot.edit_message_text(
