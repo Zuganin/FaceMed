@@ -10,8 +10,7 @@ from aiogram.filters import StateFilter
 
 from sqlalchemy.future import select
 
-from database.engine import session_maker
-from database.models import Users
+from database.database_utils import check_user_registration, register_user
 from bot.config import logger
 
 
@@ -51,18 +50,9 @@ async def help(message: Message):
 @router_handler.message(Command('registration'))
 async def cmd_register(message: Message, state: FSMContext):
     # Проверяем, зарегистрирован ли пользователь
-    async with session_maker() as session:
-        try:
-            stmt = select(Users).where(Users.username == message.from_user.username)
-            result = await session.execute(stmt)
-            existing_user = result.scalars().first()
-            if existing_user:
-                await message.answer("Вы уже зарегистрированы!")
-                return
-        except Exception as e:
-            logger.error(f"🆘 Ошибка при проверке пользователя: {e}")
-            await message.answer("Произошла ошибка при проверке пользователя. Попробуйте позже.")
-            return
+    if check_user_registration(message.from_user.username):
+        await message.answer("Вы уже зарегистрированы!")
+        return
     logger.info(f"Пользователь {message.from_user.full_name} - {message.from_user.username} начал регистрацию")
     prompt_message = await message.answer("Введите ваше имя:")
     await state.update_data(prompt_message_id=prompt_message.message_id)
@@ -172,19 +162,14 @@ async def process_gender(callback_query: CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
 
-    # Сохраняем данные в базу данных
-    async with session_maker() as session:
-        async with session.begin():
-            new_user = Users(
-                name=data['name'],
-                surname=data['surname'],
-                username=callback_query.from_user.username,
-                age=data.get('age'),
-                gender=data.get('gender')
-            )
-            session.add(new_user)
-            # Фиксируем изменения в базе данных
-        logger.debug("Данные успешно загружены в базу")
+    # Регистрируем пользователя
+    await register_user(
+        name=data['name'],
+        surname=data['surname'],
+        username=callback_query.from_user.username,
+        age=data.get('age'),
+        gender=data.get('gender')
+    )
 
     prompt_message_id = data.get("prompt_message_id")
     await callback_query.bot.edit_message_text(

@@ -130,6 +130,9 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
 
         server_instance.stop()
 
+        # Загрузка результата в базу данных
+
+
         # Отправка результата
         await callback.message.answer_photo(
             photo=BufferedInputFile(annotated_photo, filename=result_path),
