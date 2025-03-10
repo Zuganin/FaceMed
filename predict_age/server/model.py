@@ -2,7 +2,7 @@ import numpy as np
 from deepface import DeepFace
 import cv2
 
-from bot.config import logger
+from predict_age.config import logger
 
 def get_image(image_data):
     """
@@ -31,7 +31,7 @@ def get_predict(request):
         return analysis
     except ValueError as e:
         if "Face could not be detected" in str(e):
-            return "❌ Лицо не найдено на изображении"
+            return "Лицо не найдено на изображении"
 
 
 def get_annotation(results, request):

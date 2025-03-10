@@ -1,11 +1,11 @@
 
 import grpc
 
-from bot.config import logger
-from microservices.detect_disease.proto_disease  import predict_disease_pb2
-from microservices.detect_disease.proto_disease import predict_disease_pb2_grpc
+from detect_disease.proto_disease  import predict_disease_pb2
+from detect_disease.proto_disease import predict_disease_pb2_grpc
 
-from .model import *
+from detect_disease.server.model import *
+from detect_disease.config import logger
 
 class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
     """

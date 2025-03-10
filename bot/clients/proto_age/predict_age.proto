@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package predict_age;
+
+// Сервис для детекции объектов с помощью модели YOLO
+service PredictAge {
+  // Метод Detect принимает изображение и возвращает список обнаруженных объектов
+  rpc PredictAge (ImageRequest) returns (PredictionResponse);
+
+}
+
+// Сообщение, содержащее изображение, закодированное в байтах
+message ImageRequest {
+  bytes image_data = 1;
+}
+
+// Сообщение, содержащее результаты детекции (список обнаруженных объектов)
+message PredictionResponse {
+  bytes image = 1;
+  string report = 2;
+}

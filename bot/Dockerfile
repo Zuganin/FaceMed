@@ -1,6 +1,5 @@
-
 # Pull base image
-FROM python:3.11-alpine
+FROM python:3.12
 
 # Set work directory
 WORKDIR /app/bot
@@ -9,10 +8,12 @@ WORKDIR /app/bot
 COPY ./requirements.txt .
 
 # Install dependencies
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
 
 # Copy code
 COPY . .
 
 # CMD
-CMD ["python3", "config.py"]
+CMD ["python3", "main.py"]

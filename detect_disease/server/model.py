@@ -7,7 +7,7 @@ import torch
 import  numpy as np
 import cv2
 
-from bot.config import logger
+from detect_disease.config import logger
 
 
 def load_model():
@@ -16,9 +16,9 @@ def load_model():
     """
     # Определяем доступное устройство
     device = "mps" if torch.backends.mps.is_available() else "cpu"
-
+    logger.debug(f"Модель использует device: {device}")
     # Загружаем модель из указанного пути
-    model = YOLOWorld("microservices/detect_disease/models/Yolo_train_best.pt").to(device)
+    model = YOLOWorld("models/Yolo_train_best.pt").to(device)
     return model
 
 

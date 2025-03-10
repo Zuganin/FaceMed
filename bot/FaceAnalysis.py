@@ -1,4 +1,3 @@
-import threading
 import os
 
 from aiogram import types, F, Router
@@ -8,10 +7,8 @@ from aiogram.fsm.state import StatesGroup, State
 
 from bot.config import bot, logger
 from bot.database.database_utils import add_user_disease_diagnostic, check_user_registration
-from microservices.detect_disease.server.server import Server_disease, run_server_disease
-from microservices.predict_age.server.server import Server_age, run_server_age
-from microservices.detect_disease.client import client as client_disease
-from microservices.predict_age.client import client as client_age
+from bot.clients.disease_client import client as client_disease
+from bot.clients.age_client import client as client_age
 
 #======================================================================================================================#
 
@@ -26,7 +23,7 @@ photoProcessingCommands = InlineKeyboardMarkup(inline_keyboard=[
 analyzer_router = Router()
 
 #======================================================================================================================#
-@analyzer_router.message(F.photo)
+@analyzer_router.message(F.photo | F.document)
 async def handle_photo(message: types.Message, state: FSMContext):
     """
         Обрабатывает входящее фото от пользователя, сохраняет его локально и предлагает действия.
@@ -35,13 +32,22 @@ async def handle_photo(message: types.Message, state: FSMContext):
         :param state: Контекст FSM состояния пользователя
         :return: None
     """
-    photo_path = f"{message.from_user.username}_photo.jpg"
-    logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
     try:
-        # Скачиваем фото
-        photo = message.photo[-1]
-        file_info = await bot.get_file(photo.file_id)
-        await bot.download_file(file_info.file_path, photo_path)
+        # Проверяем, является ли файл фотографией
+        if message.photo:
+            photo = message.photo[-1]
+            file_info = await bot.get_file(photo.file_id)
+            photo_path = f"{message.from_user.username}_photo.jpg"
+            await bot.download_file(file_info.file_path, photo_path)
+            logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
+        # Или если это файл изображения
+        elif message.document and message.document.mime_type.startswith('image'):
+            file_info = await bot.get_file(message.document.file_id)
+            photo_path = f"{message.from_user.username}_{message.document.file_name}"
+            await bot.download_file(file_info.file_path, photo_path)
+            logger.info(f"Пользователь {message.from_user.username} отправил файл {photo_path}")
+        else:
+            raise ValueError("Не поддерживаемый тип файла.")
 
         # Сохраняем путь к фото в состоянии
         await state.update_data(photo_path=photo_path)
@@ -51,10 +57,32 @@ async def handle_photo(message: types.Message, state: FSMContext):
 
         # Предлагаем выбрать действие с помощью инлайн-клавиатуры
         await message.answer("Выбери действие:", reply_markup=photoProcessingCommands)
-        logger.info(f"✅ Фото успешно скачано. Пользователь {message.from_user.username} выбирает действие.")
+        logger.info(f"Фото или файл успешно скачано. Пользователь {message.from_user.username} выбирает действие.")
     except Exception as e:
-        logger.error(f"🆘 Ошибка загрузки фото: {e}")
+        logger.error(f"Ошибка загрузки изображения: {e}")
         await message.reply(f"Ошибка загрузки изображения: {e}")
+
+    #
+    # photo_path = f"{message.from_user.username}_photo.jpg"
+    # logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
+    # try:
+    #     # Скачиваем фото
+    #     photo = message.photo[-1]
+    #     file_info = await bot.get_file(photo.file_id)
+    #     await bot.download_file(file_info.file_path, photo_path)
+    #
+    #     # Сохраняем путь к фото в состоянии
+    #     await state.update_data(photo_path=photo_path)
+    #
+    #     # Устанавливаем состояние
+    #     await state.set_state(UserActions.photos_processing)
+    #
+    #     # Предлагаем выбрать действие с помощью инлайн-клавиатуры
+    #     await message.answer("Выбери действие:", reply_markup=photoProcessingCommands)
+    #     logger.info(f"Фото успешно скачано. Пользователь {message.from_user.username} выбирает действие.")
+    # except Exception as e:
+    #     logger.error(f"Ошибка загрузки фото: {e}")
+    #     await message.reply(f"Ошибка загрузки изображения: {e}")
 
 
 
@@ -76,22 +104,16 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
     result_path = f"{callback.from_user.username}_result.jpg"
 
     if not photo_path:
-        logger.error(f"🆘 Произошло ошибка при анализе возраста. Возможно фото не было загружено.")
+        logger.error(f"Произошло ошибка при анализе возраста. Возможно фото не было загружено.")
         await callback.message.reply("Сначала отправь фото.")
         return
 
     try:
         # Обращение к клиентскому сервису
-
-        server_instance = Server_age()
-        server_thread = threading.Thread(target=run_server_age, args=(server_instance,), daemon=True)
-        server_thread.start()
         results = client_age.get_predict(photo_path)
         annotated_photo = results.image
 
-        logger.info(f"✅ Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
-
-        server_instance.stop()
+        logger.info(f"Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
 
         # Отправка результата
         await callback.message.answer_photo(
@@ -135,21 +157,19 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
     result_path = f"{callback.from_user.username}_diagnosis_result.jpg"
 
     if not photo_path:
-        logger.error(f"🆘 Произошло ошибка при анализе лица. Возможно фото не было загружено.")
+        logger.error(f"Произошло ошибка при анализе лица. Возможно фото не было загружено.")
         await callback.message.reply("Сначала отправьте фото.")
         return
 
     try:
         # Обращение к клиентскому сервису
-        server_instance = Server_disease()
-        server_thread = threading.Thread(target=run_server_disease, args=(server_instance,), daemon=True)
-        server_thread.start()
+
         results = client_disease.get_predict(photo_path)
         annotated_photo = results.image
 
-        logger.info(f"✅ Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
+        logger.info(f"Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
 
-        server_instance.stop()
+    
 
         # Загрузка результата в базу данных
         if check_user_registration(callback.from_user.username):
@@ -160,10 +180,10 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
             photo=BufferedInputFile(annotated_photo, filename=result_path),
             caption=results.report
         )
-        logger.info(f"✅ Пользователь {callback.from_user.username} успешно прошел диагностику.")
+        logger.info(f"Пользователь {callback.from_user.username} успешно прошел диагностику.")
 
     except Exception as e:
-        logger.error(f"🆘 Произошла ошибка при диагностике: {e}")
+        logger.error(f"Произошла ошибка при диагностике: {e}")
         await callback.message.answer(f"Ошибка диагностики: {str(e)}")
 
     finally:

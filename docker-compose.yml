@@ -1,90 +1,62 @@
-version: '3.8'
+
 
 services:
   bot:
+    container_name: bot
     build:
       context: ./bot
       dockerfile: ./Dockerfile
-    env_file:
-      - .env
-    ports:
-      - "50055:50055"
-    depends_on:
-      - predict_age1
-      - predict_age2
-      - detect_disease1
-      - detect_disease2
-      - postgres
-      - nginx
-
-  postgres:
-    build:
-      context: ./database
-      dockerfile: ./Dockerfile
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=${DB_PASS}
-      - POSTGRES_DB=${DB_NAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "50053:50053"
+    depends_on:
+      - postgres
+      - predict_age1
+    networks:
+      - backend
 
   predict_age1:
+    container_name: predict_age1
     build:
-      context: ./microservices/predict/services/client
+      context: ./predict_age
       dockerfile: ./Dockerfile
     environment:
       - GRPC_HOST_LOCAL=0.0.0.0
       - GRPC_PORT=50051
     ports:
       - "50051:50051"
-    container_name: predict_age1
+    networks:
+      - backend
 
-  predict_age2:
+  detect_disease1:
+    container_name: detect_disease1
     build:
-      context: ./microservices/predict/services/client
+      context: ./detect_disease
       dockerfile: ./Dockerfile
     environment:
       - GRPC_HOST_LOCAL=0.0.0.0
       - GRPC_PORT=50052
     ports:
       - "50052:50052"
-    container_name: predict_age2
+    networks:
+      - backend
 
-  detect_disease1:
-    build:
-      context: ./microservices/predict/services/client
-      dockerfile: ./Dockerfile
+  postgres:
+    container_name: postgresql
+    image: postgres:latest
     environment:
-      - GRPC_HOST_LOCAL=0.0.0.0
-      - GRPC_PORT=50053
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "50053:50053"
-    container_name: detect_disease1
-
-  detect_disease2:
-    build:
-      context: ./microservices/predict/services/client
-      dockerfile: ./Dockerfile
-    environment:
-      - GRPC_HOST_LOCAL=0.0.0.0
-      - GRPC_PORT=50054
-    ports:
-      - "50054:50054"
-    container_name: detect_disease2
-
-  nginx:
-    image: nginx:latest
-    ports:
-      - "443:443"
+      - "5432:5432"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - predict_age1
-      - predict_age2
-      - detect_disease1
-      - detect_disease2
-    restart: always
-
+      - postgres_data:/var/lib/postgresql/data
+    restart: on-failure
+    networks:
+      - backend
 volumes:
-  pgdata:
+  postgres_data:
+
+networks:
+  backend:
+

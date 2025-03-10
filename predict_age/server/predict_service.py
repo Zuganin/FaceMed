@@ -1,8 +1,9 @@
 import grpc
 
-from microservices.predict_age.proto_age  import predict_age_pb2
-from microservices.predict_age.proto_age import predict_age_pb2_grpc
-from .model import *
+from predict_age.proto_age  import predict_age_pb2
+from predict_age.proto_age import predict_age_pb2_grpc
+from predict_age.server.model import *
+from predict_age.config import logger
 
 
 class PredictAgeServicer(predict_age_pb2_grpc.PredictAgeServicer):

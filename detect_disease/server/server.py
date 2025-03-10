@@ -3,10 +3,9 @@ import os
 import grpc
 from concurrent import futures
 
-from bot.config import logger
-from microservices.detect_disease.proto_disease import predict_disease_pb2_grpc
-from microservices.detect_disease.server.predict_service import PredictDiseaseServicer
-
+from detect_disease.config import logger
+from detect_disease.proto_disease import predict_disease_pb2_grpc
+from detect_disease.server.predict_service import PredictDiseaseServicer
 
 
 class Server_disease:
@@ -24,7 +23,7 @@ class Server_disease:
         server_addres = f"{os.getenv('GRPC_HOST_LOCAL')}:{os.getenv('GRPC_PORT')}"
         # Настройка порта для сервера
         # self.server.add_insecure_port(server_addres)
-        self.server.add_insecure_port('[::]:50051')
+        self.server.add_insecure_port(server_addres)
         logger.debug(f"Сервер проинициализирован на {server_addres}")
 
     def start(self):
@@ -49,12 +48,12 @@ class Server_disease:
         self.server.stop(grace=False)
         logger.info("gRPC сервер остановлен")
 
-def run_server_disease(server_instance):
-    """
-        Функция для запуска сервера. Сначала запускает, затем ожидает завершения.
+    def run_server_disease(self):
+        """
+            Функция для запуска сервера. Сначала запускает, затем ожидает завершения.
 
-        :param server_instance: экземпляр класса Server_disease
-    """
-    server_instance.start()
-    server_instance.wait()
+            :param server_instance: экземпляр класса Server_disease
+        """
+        self.start()
+        self.wait()
 
