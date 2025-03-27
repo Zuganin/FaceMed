@@ -9,7 +9,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram import Router
 
 from bot.config import bot, logger
-from database.database_utils import add_user_diagnostic
+from database.database_utils import add_user_disease_diagnostic
 from microservices.predict.services.detect_disease.server import Server_disease, run_server_disease
 from microservices.predict.services.predict_age.server import Server_age, run_server_age
 from microservices.predict.client.detect_disease import client as client_disease
@@ -132,7 +132,7 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
         server_instance.stop()
 
         # Загрузка результата в базу данных
-        await add_user_diagnostic(callback.from_user.username, result_path, annotated_photo, results.disease)
+        await add_user_disease_diagnostic(callback.from_user.username, result_path, annotated_photo, results.disease)
 
         # Отправка результата
         await callback.message.answer_photo(

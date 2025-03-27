@@ -27,7 +27,7 @@ async def register_user(name: str, surname: str,username: str, age: int, gender:
             return
 
 
-async def add_user_diagnostic(username: str, filename: str, image: bytes, diagnosis: str) -> None:
+async def add_user_disease_diagnostic(username: str, filename: str, image: bytes, diagnosis: str) -> None:
     async with session_maker() as session:
         try:
             async with session.begin():
