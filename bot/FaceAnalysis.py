@@ -2,14 +2,13 @@
 import threading
 import os
 
-from aiogram import types, F
+from aiogram import types, F, Router
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, BufferedInputFile
 from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram import Router
 
 from bot.config import bot, logger
-from database.database_utils import add_user_disease_diagnostic
+from database.database_utils import add_user_disease_diagnostic, check_user_registration
 from microservices.predict.services.detect_disease.server import Server_disease, run_server_disease
 from microservices.predict.services.predict_age.server import Server_age, run_server_age
 from microservices.predict.client.detect_disease import client as client_disease
@@ -20,19 +19,18 @@ from microservices.predict.client.pedict_age import client as client_age
 class UserActions(StatesGroup):
     photos_processing = State()
 
-
-router_analyzer = Router()
-
 photoProcessingCommands = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Анализировать возраст", callback_data="analyze_age")],
             [InlineKeyboardButton(text="Провести диагностику", callback_data="diagnose_disease")]
         ])
 
+analyzer_router = Router()
+
 #======================================================================================================================#
-@router_analyzer.message(F.photo)
+@analyzer_router.message(F.photo)
 async def handle_photo(message: types.Message, state: FSMContext):
     photo_path = f"{message.from_user.username}_photo.jpg"
-    logger.info(f"Пользователь {message.from_user.full_name} отправил фото {photo_path}")
+    logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
     try:
         # Скачиваем фото
         photo = message.photo[-1]
@@ -47,7 +45,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
 
         # Предлагаем выбрать действие с помощью инлайн-клавиатуры
         await message.answer("Выбери действие:", reply_markup=photoProcessingCommands)
-        logger.info(f"✅ Фото успешно скачано. Пользователь {message.from_user.full_name} выбирает действие.")
+        logger.info(f"✅ Фото успешно скачано. Пользователь {message.from_user.username} выбирает действие.")
     except Exception as e:
         logger.error(f"🆘 Ошибка загрузки фото: {e}")
         await message.reply(f"Ошибка загрузки изображения: {e}")
@@ -57,7 +55,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
 #======================================================================================================================#
 
 # Обработчик выбора действия "Анализировать возраст"
-@router_analyzer.callback_query(F.data == "analyze_age", UserActions.photos_processing)
+@analyzer_router.callback_query(F.data == "analyze_age", UserActions.photos_processing)
 async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
@@ -77,7 +75,7 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
         results = client_age.get_predict(photo_path)
         annotated_photo = results.image
 
-        logger.info(f"✅ Пользователь {callback.from_user.full_name} успешно отправил фото на диагностику.")
+        logger.info(f"✅ Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
 
         server_instance.stop()
 
@@ -87,7 +85,7 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
             caption=results.report
         )
 
-        logger.info(f"✅ Пользователь {callback.from_user.full_name} успешно прошел анализ возраста.")
+        logger.info(f"✅ Пользователь {callback.from_user.username} успешно прошел анализ возраста.")
 
     except Exception as e:
         logger.error(f"🆘 Произошла ошибка при анализе возраста: {e}")
@@ -102,13 +100,13 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
 
         # Сбрасываем состояние
         await state.clear()
-        logger.debug(f"Состояние пользователя {callback.from_user.full_name} успешно сброшено.")
+        logger.debug(f"Состояние пользователя {callback.from_user.username} успешно сброшено.")
 
 
 
 #======================================================================================================================#
 
-@router_analyzer.callback_query(F.data == "diagnose_disease", UserActions.photos_processing)
+@analyzer_router.callback_query(F.data == "diagnose_disease", UserActions.photos_processing)
 async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
@@ -127,19 +125,20 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
         results = client_disease.get_predict(photo_path)
         annotated_photo = results.image
 
-        logger.info(f"✅ Пользователь {callback.from_user.full_name} успешно отправил фото на диагностику.")
+        logger.info(f"✅ Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
 
         server_instance.stop()
 
         # Загрузка результата в базу данных
-        await add_user_disease_diagnostic(callback.from_user.username, result_path, annotated_photo, results.disease)
+        if check_user_registration(callback.from_user.username):
+            await add_user_disease_diagnostic(callback.from_user.username, result_path, annotated_photo, results.disease)
 
         # Отправка результата
         await callback.message.answer_photo(
             photo=BufferedInputFile(annotated_photo, filename=result_path),
             caption=results.report
         )
-        logger.info(f"✅ Пользователь {callback.from_user.full_name} успешно прошел диагностику.")
+        logger.info(f"✅ Пользователь {callback.from_user.username} успешно прошел диагностику.")
 
     except Exception as e:
         logger.error(f"🆘 Произошла ошибка при диагностике: {e}")
@@ -151,4 +150,4 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
             if os.path.exists(path):
                 os.remove(path)
         await state.clear()
-        logger.debug(f"Состояние пользователя {callback.from_user.full_name} успешно сброшено.")
+        logger.debug(f"Состояние пользователя {callback.from_user.username} успешно сброшено.")

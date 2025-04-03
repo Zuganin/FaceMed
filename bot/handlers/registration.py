@@ -2,14 +2,15 @@
 
 from aiogram.filters import Command
 from aiogram.types import  Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from aiogram import F , types
+from aiogram import F, types, Router
 from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import StateFilter
 
+
 from database.database_utils import check_user_registration, register_user
 from bot.config import logger
-from handlers import  router_handler
+
 
 answerSkipAgeButton = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="Пропустить", callback_data="skipAge")]])
 
@@ -18,15 +19,16 @@ answerGenderStateButton = InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text="Пропустить", callback_data="skipGender")]
         ])
 
+registration_router = Router()
+
 class RegistrationStates(StatesGroup):
     waiting_for_name = State()
     waiting_for_surname = State()
     waiting_for_age = State()
     waiting_for_gender = State()
 
-
 # Обработчик команды /register - старт регистрации
-@router_handler.message(Command('registration'))
+@registration_router.message(Command('registration'))
 async def cmd_register(message: Message, state: FSMContext):
     # Проверяем, зарегистрирован ли пользователь
     if check_user_registration(message.from_user.username):
@@ -37,9 +39,8 @@ async def cmd_register(message: Message, state: FSMContext):
     await state.update_data(prompt_message_id=prompt_message.message_id)
     await state.set_state(RegistrationStates.waiting_for_name)
 
-
 # Обработчик ввода имени
-@router_handler.message(StateFilter(RegistrationStates.waiting_for_name))
+@registration_router.message(StateFilter(RegistrationStates.waiting_for_name))
 async def process_name(message: Message, state: FSMContext):
     logger.info(f"✅ Пользователь {message.from_user.full_name} успешно ввёл имя: {message.text}")
     await state.update_data(name=message.text)
@@ -56,7 +57,7 @@ async def process_name(message: Message, state: FSMContext):
 
 
 # Обработчик ввода фамилии
-@router_handler.message(StateFilter(RegistrationStates.waiting_for_surname))
+@registration_router.message(StateFilter(RegistrationStates.waiting_for_surname))
 async def process_surname(message: Message, state: FSMContext):
     logger.info(f"✅ Пользователь {message.from_user.full_name} успешно ввёл фамилию: {message.text}")
     await state.update_data(surname=message.text)
@@ -72,7 +73,7 @@ async def process_surname(message: Message, state: FSMContext):
     await state.set_state(RegistrationStates.waiting_for_age)
 
 
-@router_handler.callback_query(F.data == "skipAge", RegistrationStates.waiting_for_age)
+@registration_router.callback_query(F.data == "skipAge", RegistrationStates.waiting_for_age)
 async def skip_age(callback_query: types.CallbackQuery, state: FSMContext):
     await state.update_data(age=None)
     data = await state.get_data()
@@ -93,7 +94,7 @@ async def skip_age(callback_query: types.CallbackQuery, state: FSMContext):
 
 
 # Обработчик ввода возраста
-@router_handler.message(StateFilter(RegistrationStates.waiting_for_age))
+@registration_router.message(StateFilter(RegistrationStates.waiting_for_age))
 async def process_age(message: Message, state: FSMContext):
     data = await state.get_data()
     if not message.text.isdigit():
@@ -123,7 +124,7 @@ async def process_age(message: Message, state: FSMContext):
     )
     await state.set_state(RegistrationStates.waiting_for_gender)
 
-@router_handler.message(StateFilter(RegistrationStates.waiting_for_gender))
+@registration_router.message(StateFilter(RegistrationStates.waiting_for_gender))
 async def process_gender(message: Message):
     logger.info(f"🆘 Пользователь {message.from_user.full_name} отправил сообщение: {message.text} - неизвестная команда")
     await message.delete()
@@ -131,7 +132,7 @@ async def process_gender(message: Message):
 
 
 # Обработчик ввода пола и сохранения данных в БД
-@router_handler.callback_query(StateFilter(RegistrationStates.waiting_for_gender))
+@registration_router.callback_query(StateFilter(RegistrationStates.waiting_for_gender))
 async def process_gender(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer()
     choice = callback_query.data
