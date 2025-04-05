@@ -7,8 +7,15 @@ from microservices.predict.proto.proto_age import predict_age_pb2_grpc
 
 
 def get_predict(image_path):
+    """
+        Функция для отправки изображения на сервер для предсказания возраста.
+
+        :param image_path: Путь к изображению, которое будет отправлено на сервер
+        :return: Ответ от сервера с результатами предсказания возраста
+    """
     logger.debug("Запуск клиента")
-    # Устанавливаем соединение с сервером
+
+    # Устанавливаем соединение с сервером, расположенным на localhost:50052
     channel = grpc.insecure_channel('localhost:50052')
     stub = predict_age_pb2_grpc.PredictAgeStub(channel)
     logger.debug("Соединение с сервером установлено")
@@ -23,8 +30,10 @@ def get_predict(image_path):
 
     logger.debug(f"Отправляем изображение размером {len(image_bytes)} байт")
     # Формируем запрос
+
     request =  predict_age_pb2.ImageRequest(image_data=image_bytes)
     logger.debug("Отправляем запрос на сервер...")
+
     # Отправляем запрос и получаем ответ
     response = stub.PredictAge(request)
     logger.debug("Ответ получен")

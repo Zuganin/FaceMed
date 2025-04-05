@@ -7,8 +7,14 @@ from microservices.predict.proto.proto_disease import predict_disease_pb2_grpc
 
 
 def get_predict(image_path):
+    """
+        Функция для отправки изображения на сервер для диагностики заболевания.
+
+        :param image_path: Путь к изображению, которое будет отправлено на сервер
+        :return: Ответ от сервера с результатами диагностики
+    """
     logger.debug("Запуск клиента")
-    # Устанавливаем соединение с сервером
+    # Устанавлcиваем соединение с сервером
     channel = grpc.insecure_channel('localhost:50051')
     stub = predict_disease_pb2_grpc.PredictDiseaseStub(channel)
     logger.debug("Соединение с сервером установлено")
