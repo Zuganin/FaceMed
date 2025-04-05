@@ -1,15 +1,23 @@
-
 import grpc
 
-from bot.config import logger
 from microservices.predict.proto.proto_age  import predict_age_pb2
 from microservices.predict.proto.proto_age import predict_age_pb2_grpc
 from .model import *
 
 
 class PredictAgeServicer(predict_age_pb2_grpc.PredictAgeServicer):
-
+    """
+        Класс-сервис, реализующий gRPC-интерфейс PredictAge.
+        Обрабатывает запрос на предсказание возраста и пола с аннотацией изображения.
+    """
     def PredictAge(self, request, context):
+        """
+            Метод gRPC-сервиса для обработки изображения и возврата результатов анализа.
+
+            :param request: объект запроса с полем image_data (байтовое изображение)
+            :param context: контекст gRPC-сессии (для отправки ошибок и метаданных)
+            :return: PredictionResponse с аннотированным изображением и текстовым отчетом
+        """
         try:
             logger.info("Сервер успешно получил изображение")
             results = get_predict(request)

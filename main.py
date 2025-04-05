@@ -5,10 +5,9 @@ from aiogram import Dispatcher
 from bot.handlers.handlers import handler_router
 from bot.handlers.history_process import history_router
 from bot.handlers.registration import registration_router
-# from bot.handlers.history_process import history_router
 from bot.FaceAnalysis import analyzer_router
 from bot.config import bot, logger
-from database.engine import create_db, drop_db
+from database.engine import create_db
 
 
 dp = Dispatcher(bot = bot)
