@@ -1,5 +1,3 @@
-
-
 from aiogram.filters import Command
 from aiogram.types import  Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram import F, types, Router
@@ -27,9 +25,15 @@ class RegistrationStates(StatesGroup):
     waiting_for_age = State()
     waiting_for_gender = State()
 
-# Обработчик команды /register - старт регистрации
 @registration_router.message(Command('registration'))
 async def cmd_register(message: Message, state: FSMContext):
+    """
+        Обрабатывает команду /registration. Запускает процесс регистрации пользователя, если он ещё не зарегистрирован.
+
+        :param message: Сообщение от пользователя
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     # Проверяем, зарегистрирован ли пользователь
     if check_user_registration(message.from_user.username):
         await message.answer("Вы уже зарегистрированы!")
@@ -39,9 +43,15 @@ async def cmd_register(message: Message, state: FSMContext):
     await state.update_data(prompt_message_id=prompt_message.message_id)
     await state.set_state(RegistrationStates.waiting_for_name)
 
-# Обработчик ввода имени
 @registration_router.message(StateFilter(RegistrationStates.waiting_for_name))
 async def process_name(message: Message, state: FSMContext):
+    """
+        Обрабатывает ввод имени пользователя и переводит на следующий шаг — ввод фамилии.
+
+        :param message: Сообщение от пользователя
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     logger.info(f"✅ Пользователь {message.from_user.full_name} успешно ввёл имя: {message.text}")
     await state.update_data(name=message.text)
     data = await state.get_data()
@@ -55,10 +65,15 @@ async def process_name(message: Message, state: FSMContext):
     )
     await state.set_state(RegistrationStates.waiting_for_surname)
 
-
-# Обработчик ввода фамилии
 @registration_router.message(StateFilter(RegistrationStates.waiting_for_surname))
 async def process_surname(message: Message, state: FSMContext):
+    """
+        Обрабатывает ввод фамилии пользователя и переводит на шаг ввода возраста.
+
+        :param message: Сообщение от пользователя
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     logger.info(f"✅ Пользователь {message.from_user.full_name} успешно ввёл фамилию: {message.text}")
     await state.update_data(surname=message.text)
     data = await state.get_data()
@@ -75,6 +90,14 @@ async def process_surname(message: Message, state: FSMContext):
 
 @registration_router.callback_query(F.data == "skipAge", RegistrationStates.waiting_for_age)
 async def skip_age(callback_query: types.CallbackQuery, state: FSMContext):
+    """
+        Обрабатывает нажатие на кнопку «Пропустить» при вводе возраста.
+        Переходит к шагу выбора пола.
+
+        :param callback_query: Callback от пользователя
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     await state.update_data(age=None)
     data = await state.get_data()
     error_msg_id = data.get("error_age_msg_id")
@@ -93,9 +116,16 @@ async def skip_age(callback_query: types.CallbackQuery, state: FSMContext):
     await state.set_state(RegistrationStates.waiting_for_gender)
 
 
-# Обработчик ввода возраста
 @registration_router.message(StateFilter(RegistrationStates.waiting_for_age))
 async def process_age(message: Message, state: FSMContext):
+    """
+        Обрабатывает ввод возраста пользователя. Проверяет корректность ввода (только число).
+        Переходит к следующему шагу — выбор пола.
+
+        :param message: Сообщение от пользователя
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     data = await state.get_data()
     if not message.text.isdigit():
         logger.info(f"🆘️ Пользователь {message.from_user.full_name} ввёл некорректный возраст: {message.text}")
@@ -126,14 +156,27 @@ async def process_age(message: Message, state: FSMContext):
 
 @registration_router.message(StateFilter(RegistrationStates.waiting_for_gender))
 async def process_gender(message: Message):
+    """
+        Обрабатывает текстовые сообщения, отправленные вместо выбора пола.
+        Удаляет сообщение и игнорирует его.
+
+        :param message: Сообщение от пользователя
+        :return: None
+    """
     logger.info(f"🆘 Пользователь {message.from_user.full_name} отправил сообщение: {message.text} - неизвестная команда")
     await message.delete()
     return
 
 
-# Обработчик ввода пола и сохранения данных в БД
 @registration_router.callback_query(StateFilter(RegistrationStates.waiting_for_gender))
 async def process_gender(callback_query: CallbackQuery, state: FSMContext):
+    """
+        Обрабатывает выбор пола пользователя и завершает регистрацию. Сохраняет все данные в базу.
+
+        :param callback_query: Callback от пользователя с выбранным полом
+        :param state: Контекст FSM состояния
+        :return: None
+    """
     await callback_query.answer()
     choice = callback_query.data
     gender = None if choice == "skipGender" else choice

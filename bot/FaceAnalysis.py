@@ -1,4 +1,3 @@
-# Description: Модуль для анализа фотографий пользователей
 import threading
 import os
 
@@ -29,6 +28,13 @@ analyzer_router = Router()
 #======================================================================================================================#
 @analyzer_router.message(F.photo)
 async def handle_photo(message: types.Message, state: FSMContext):
+    """
+        Обрабатывает входящее фото от пользователя, сохраняет его локально и предлагает действия.
+
+        :param message: Сообщение с фотографией от пользователя
+        :param state: Контекст FSM состояния пользователя
+        :return: None
+    """
     photo_path = f"{message.from_user.username}_photo.jpg"
     logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
     try:
@@ -57,6 +63,14 @@ async def handle_photo(message: types.Message, state: FSMContext):
 # Обработчик выбора действия "Анализировать возраст"
 @analyzer_router.callback_query(F.data == "analyze_age", UserActions.photos_processing)
 async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
+    """
+        Обрабатывает запрос пользователя на анализ возраста.
+        Запускает сервер, отправляет фото на предсказание и возвращает результат пользователю.
+
+        :param callback: Объект callback-запроса от пользователя
+        :param state: Контекст FSM состояния пользователя
+        :return: None
+    """
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
     result_path = f"{callback.from_user.username}_result.jpg"
@@ -108,6 +122,14 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
 
 @analyzer_router.callback_query(F.data == "diagnose_disease", UserActions.photos_processing)
 async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
+    """
+        Обрабатывает запрос пользователя на диагностику заболевания.
+        Запускает соответствующий сервер, получает диагноз и сохраняет результат в базу данных.
+
+        :param callback: Объект callback-запроса от пользователя
+        :param state: Контекст FSM состояния пользователя
+        :return: None
+    """
     user_data = await state.get_data()
     photo_path = user_data.get("photo_path")
     result_path = f"{callback.from_user.username}_diagnosis_result.jpg"

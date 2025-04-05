@@ -23,6 +23,13 @@ class HistoryProcessStates(StatesGroup):
 #======================================================================================================================#
 
 def GetHistory(message : Message, username):
+    """
+        Получает историю диагностики пользователя, если он зарегистрирован.
+
+        :param message: Объект сообщения от пользователя
+        :param username: Имя пользователя Telegram
+        :return: Список диагностик или None, если пользователь не зарегистрирован
+    """
     if check_user_registration(username):
         return get_paginated_diagnostics(username)
     else:
@@ -31,12 +38,22 @@ def GetHistory(message : Message, username):
         return
 
 def get_diagnostics_keyboard(diagnostics, page, per_page=5, total_diagnostics=0):
-    total_pages = (total_diagnostics - 1) // per_page + 1 if total_diagnostics else 0
+    """
+        Создает inline-клавиатуру для отображения списка диагностик с пагинацией.
+
+        :param diagnostics: Список диагностик для текущей страницы
+        :param page: Номер текущей страницы
+        :param per_page: Количество элементов на одной странице
+        :param total_diagnostics: Общее количество диагностик пользователя
+        :return: Объект InlineKeyboardMarkup с кнопками для выбора анализа и навигации
+    """
 
     keyboard = []
     for diag in diagnostics:
         btn = InlineKeyboardButton(text=diag["date"].strftime("%Y-%m-%d %H:%M"), callback_data=f"diag_{diag['id']}")
-        keyboard.append([btn])  # Каждая кнопка в отдельной строке
+
+        # Каждая кнопка в отдельной строке
+        keyboard.append([btn])
 
     nav_buttons = []
     if page > 0:
@@ -52,6 +69,14 @@ def get_diagnostics_keyboard(diagnostics, page, per_page=5, total_diagnostics=0)
 
 @history_router.message(Command("get_history"))
 async def GetUserChoice(message: Message, state: FSMContext):
+    """
+        Обрабатывает команду /get_history. Загружает список диагностик пользователя и отображает их с пагинацией.
+
+        :param message: Объект сообщения от пользователя
+        :param state: Контекст состояния пользователя в FSM
+        :return: None
+    """
+
     username = message.from_user.username
     diagnostics = await get_paginated_diagnostics(username, page=0)
     if diagnostics:
@@ -73,15 +98,24 @@ async def GetUserChoice(message: Message, state: FSMContext):
 
 @history_router.callback_query(lambda c: c.data.startswith("diag_"))
 async def show_diagnostic_result(callback: CallbackQuery, state: FSMContext):
+    """
+        Обрабатывает нажатие на кнопку с конкретной диагностикой. Показывает изображение и диагноз.
+
+        :param callback: Callback-запрос от пользователя
+        :param state: Контекст состояния FSM
+        :return: None
+    """
+
     diag_id = int(callback.data.split("_")[1])
     data = await state.get_data()
     diagnostics = data.get("diagnostics", [])
+
     # Поиск нужной диагностики по id
     diagnostic = next((diag for diag in diagnostics if diag.get("id") == diag_id), None)
     if diagnostic:
         # Преобразуем бинарное изображение в поток байтов
         photo_stream = io.BytesIO(diagnostic["file_bin"])
-        photo_stream.seek(0)  # Важно!
+        photo_stream.seek(0)
 
         # Используем BufferedInputFile вместо InputFile
         photo_file = BufferedInputFile(photo_stream.read(), filename=diagnostic["filename"])
@@ -98,7 +132,14 @@ async def show_diagnostic_result(callback: CallbackQuery, state: FSMContext):
 
 
 @history_router.callback_query(lambda c: c.data.startswith("page_"))
-async def change_page(callback: CallbackQuery, state: FSMContext):
+async def change_page(callback: CallbackQuery):
+    """
+        Обрабатывает переключение страниц с диагностиками.
+
+        :param callback: Callback-запрос от пользователя
+        :param state: Контекст состояния FSM
+        :return: None
+    """
     page = int(callback.data.split("_")[1])
     username = callback.from_user.username
     diagnostics, total_diagnostics = await get_paginated_diagnostics(username, page=page), await get_total_diagnostics_count(username)
