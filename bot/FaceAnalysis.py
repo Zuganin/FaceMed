@@ -12,7 +12,7 @@ from database.database_utils import add_user_disease_diagnostic, check_user_regi
 from microservices.predict.services.detect_disease.server import Server_disease, run_server_disease
 from microservices.predict.services.predict_age.server import Server_age, run_server_age
 from microservices.predict.client.detect_disease import client as client_disease
-from microservices.predict.client.pedict_age import client as client_age
+from microservices.predict.client.predict_age import client as client_age
 
 #======================================================================================================================#
 

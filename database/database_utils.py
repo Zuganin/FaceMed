@@ -5,18 +5,37 @@ from database.engine import session_maker
 from database.models import Users, Diagnostics
 from bot.config import logger
 
+# Функция для проверки, зарегистрирован ли пользователь в базе данных
 async def check_user_registration(username: str) -> bool:
+    """
+        Проверяет, зарегистрирован ли пользователь в базе данных.
+
+        :param username: Имя пользователя для проверки
+        :return: Объект пользователя, если найден, иначе False
+    """
     async with session_maker() as session:
         try:
+            # Строим запрос для поиска пользователя по имени
             stmt = select(Users).where(Users.username == username)
             result = await session.execute(stmt)
+
+            # Возвращаем первого найденного пользователя или None, если не найден
             return result.scalars().first()
         except Exception as e:
             logger.error(f"🆘 Ошибка при проверке пользователя: {e}")
             return False
 
 async def register_user(name: str, surname: str,username: str, age: int, gender: str) -> None:
-    # Сохраняем данные в базу данных
+    """
+        Регистрирует нового пользователя в базе данных.
+
+        :param name: Имя пользователя
+        :param surname: Фамилия пользователя
+        :param username: Уникальное имя пользователя (username)
+        :param age: Возраст пользователя
+        :param gender: Пол пользователя
+        :return: None
+    """
     async with session_maker() as session:
         try:
             async with session.begin():
@@ -29,6 +48,15 @@ async def register_user(name: str, surname: str,username: str, age: int, gender:
 
 
 async def add_user_disease_diagnostic(username: str, filename: str, image: bytes, diagnosis: str) -> None:
+    """
+        Добавляет информацию о диагностике пользователя в базу данных.
+
+        :param username: Имя пользователя
+        :param filename: Имя файла изображения
+        :param image: Изображение в формате байтов
+        :param diagnosis: Текст диагноза
+        :return: None
+    """
     async with session_maker() as session:
         try:
             async with session.begin():
@@ -41,6 +69,14 @@ async def add_user_disease_diagnostic(username: str, filename: str, image: bytes
 
 
 async def get_paginated_diagnostics(username: str, page=0, per_page=5):
+    """
+        Получает список диагностик пользователя с пагинацией.
+
+        :param username: Имя пользователя
+        :param page: Номер страницы (по умолчанию 0)
+        :param per_page: Количество записей на странице (по умолчанию 5)
+        :return: Список словарей с диагностической информацией
+    """
     async with session_maker() as session:
         try:
             async with session.begin():
@@ -66,6 +102,12 @@ async def get_paginated_diagnostics(username: str, page=0, per_page=5):
 
 
 async def get_total_diagnostics_count( username):
+    """
+        Получает общее количество диагностик для указанного пользователя.
+
+        :param username: Имя пользователя
+        :return: Количество диагностик (int) или None в случае ошибки
+    """
     async with session_maker() as session:
         try:
             async with session.begin():
