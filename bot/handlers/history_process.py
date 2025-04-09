@@ -7,7 +7,7 @@ from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from database.database_utils import check_user_registration, get_paginated_diagnostics, get_total_diagnostics_count
+from bot.database.database_utils import check_user_registration, get_paginated_diagnostics, get_total_diagnostics_count
 from bot.config import logger
 
 

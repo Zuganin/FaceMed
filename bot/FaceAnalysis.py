@@ -7,7 +7,7 @@ from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
 from bot.config import bot, logger
-from database.database_utils import add_user_disease_diagnostic, check_user_registration
+from bot.database.database_utils import add_user_disease_diagnostic, check_user_registration
 from microservices.detect_disease.server.server import Server_disease, run_server_disease
 from microservices.predict_age.server.server import Server_age, run_server_age
 from microservices.detect_disease.client import client as client_disease

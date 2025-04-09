@@ -6,7 +6,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.filters import StateFilter
 
 
-from database.database_utils import check_user_registration, register_user
+from bot.database.database_utils import check_user_registration, register_user
 from bot.config import logger
 
 

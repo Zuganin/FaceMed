@@ -1,8 +1,8 @@
 from sqlalchemy.future import select
-from tensorboard.plugins.image.summary_v2 import image
 
-from database.engine import session_maker
-from database.models import Users, Diagnostics
+
+from bot.database.engine import session_maker
+from bot.database.models import Users, Diagnostics
 from bot.config import logger
 
 # Функция для проверки, зарегистрирован ли пользователь в базе данных
