@@ -1,7 +1,7 @@
 import grpc
 
-from microservices.predict.proto.proto_age  import predict_age_pb2
-from microservices.predict.proto.proto_age import predict_age_pb2_grpc
+from microservices.predict_age.proto_age  import predict_age_pb2
+from microservices.predict_age.proto_age import predict_age_pb2_grpc
 from .model import *
 
 

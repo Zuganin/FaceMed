@@ -1,10 +1,11 @@
+import os
+
 import grpc
 from concurrent import futures
 
-
 from bot.config import logger
-from microservices.predict.proto.proto_disease import predict_disease_pb2_grpc
-from microservices.predict.services.detect_disease.predict_service import PredictDiseaseServicer
+from microservices.detect_disease.proto_disease import predict_disease_pb2_grpc
+from microservices.detect_disease.server.predict_service import PredictDiseaseServicer
 
 
 
@@ -20,9 +21,11 @@ class Server_disease:
         # Регистрируем реализацию gRPC-сервиса (PredictDiseaseServicer) на сервере
         predict_disease_pb2_grpc.add_PredictDiseaseServicer_to_server(PredictDiseaseServicer(), self.server)
 
-        # Настраиваем порт, на котором будет работать сервер (50051)
+        server_addres = f"{os.getenv('GRPC_HOST_LOCAL')}:{os.getenv('GRPC_PORT')}"
+        # Настройка порта для сервера
+        # self.server.add_insecure_port(server_addres)
         self.server.add_insecure_port('[::]:50051')
-        logger.debug("Сервер проинициализирован")
+        logger.debug(f"Сервер проинициализирован на {server_addres}")
 
     def start(self):
         """

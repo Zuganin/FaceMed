@@ -3,9 +3,9 @@
 import grpc
 import warnings
 
-from microservices.predict.proto.proto_disease import predict_disease_pb2 as microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2
+from . import predict_disease_pb2 as predict__disease__pb2
 
-GRPC_GENERATED_VERSION = '1.70.0'
+GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in microservices/predict/proto/proto_disease/predict_disease_pb2_grpc.py depends on'
+        + f' but the generated code in predict_disease_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -37,8 +37,8 @@ class PredictDiseaseStub(object):
         """
         self.DetectDisease = channel.unary_unary(
                 '/predict_disease.PredictDisease/DetectDisease',
-                request_serializer=microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.ImageRequest.SerializeToString,
-                response_deserializer=microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.DetectionResponse.FromString,
+                request_serializer=predict__disease__pb2.ImageRequest.SerializeToString,
+                response_deserializer=predict__disease__pb2.DetectionResponse.FromString,
                 _registered_method=True)
 
 
@@ -58,8 +58,8 @@ def add_PredictDiseaseServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'DetectDisease': grpc.unary_unary_rpc_method_handler(
                     servicer.DetectDisease,
-                    request_deserializer=microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.ImageRequest.FromString,
-                    response_serializer=microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.DetectionResponse.SerializeToString,
+                    request_deserializer=predict__disease__pb2.ImageRequest.FromString,
+                    response_serializer=predict__disease__pb2.DetectionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -88,8 +88,8 @@ class PredictDisease(object):
             request,
             target,
             '/predict_disease.PredictDisease/DetectDisease',
-            microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.ImageRequest.SerializeToString,
-            microservices_dot_predict_dot_proto_dot_proto__disease_dot_predict__disease__pb2.DetectionResponse.FromString,
+            predict__disease__pb2.ImageRequest.SerializeToString,
+            predict__disease__pb2.DetectionResponse.FromString,
             options,
             channel_credentials,
             insecure,

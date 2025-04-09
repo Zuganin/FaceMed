@@ -8,10 +8,10 @@ from aiogram.fsm.state import StatesGroup, State
 
 from bot.config import bot, logger
 from database.database_utils import add_user_disease_diagnostic, check_user_registration
-from microservices.predict.services.detect_disease.server import Server_disease, run_server_disease
-from microservices.predict.services.predict_age.server import Server_age, run_server_age
-from microservices.predict.client.detect_disease import client as client_disease
-from microservices.predict.client.predict_age import client as client_age
+from microservices.detect_disease.server.server import Server_disease, run_server_disease
+from microservices.predict_age.server.server import Server_age, run_server_age
+from microservices.detect_disease.client import client as client_disease
+from microservices.predict_age.client import client as client_age
 
 #======================================================================================================================#
 

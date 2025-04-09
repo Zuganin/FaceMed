@@ -1,12 +1,10 @@
 import io
 
 from aiogram.filters import Command
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, BufferedInputFile, \
-    InputFile
-from aiogram import F, types, Router
+from aiogram.types import Message, CallbackQuery, BufferedInputFile
+from aiogram import Router
 from aiogram.fsm.context import  FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.filters import StateFilter
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from database.database_utils import check_user_registration, get_paginated_diagnostics, get_total_diagnostics_count
@@ -119,7 +117,14 @@ async def show_diagnostic_result(callback: CallbackQuery, state: FSMContext):
 
         # Используем BufferedInputFile вместо InputFile
         photo_file = BufferedInputFile(photo_stream.read(), filename=diagnostic["filename"])
-        result_text = f"📋 **Диагноз:** {diagnostic.get('diagnosis')}"
+        diagnosis = diagnostic.get('diagnosis')
+
+        if diagnosis == 'None':
+            result_text = ("Видимые заболевания не обнаружены.\n" +
+                           "Однако, если Вы чувствуете недомогание, пожалуйста, обратитесь к врачу.")
+        else:
+            result_text = f"📋 Результаты диагностики: {diagnostic.get('diagnosis')}"
+
         await callback.message.delete()
         await callback.message.answer_photo(
             photo=photo_file,

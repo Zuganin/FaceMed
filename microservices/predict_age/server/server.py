@@ -1,10 +1,13 @@
+import os
+
 import grpc
 from concurrent import futures
 
+from grpc import server
 
 from bot.config import logger
-from microservices.predict.proto.proto_age import predict_age_pb2_grpc
-from microservices.predict.services.predict_age.predict_service import PredictAgeServicer
+from microservices.predict_age.proto_age import predict_age_pb2_grpc
+from microservices.predict_age.server.predict_service import PredictAgeServicer
 
 
 
@@ -19,9 +22,11 @@ class Server_age:
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         predict_age_pb2_grpc.add_PredictAgeServicer_to_server(PredictAgeServicer(), self.server)
 
-        # Настройка порта для сервера (50052)
+        server_addres = f"{os.getenv('GRPC_HOST_LOCAL')}:{os.getenv('GRPC_PORT')}"
+        # Настройка порта для сервера
+        # self.server.add_insecure_port(server_addres)
         self.server.add_insecure_port('[::]:50052')
-        logger.debug("Сервер проинициализирован")
+        logger.debug(f"Сервер проинициализирован на {server_addres}")
 
     def start(self):
         """

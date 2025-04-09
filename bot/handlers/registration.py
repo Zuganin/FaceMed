@@ -35,7 +35,8 @@ async def cmd_register(message: Message, state: FSMContext):
         :return: None
     """
     # Проверяем, зарегистрирован ли пользователь
-    if check_user_registration(message.from_user.username):
+    user_registration = await check_user_registration(message.from_user.username)
+    if user_registration:
         await message.answer("Вы уже зарегистрированы!")
         return
     logger.info(f"Пользователь {message.from_user.full_name} - {message.from_user.username} начал регистрацию")

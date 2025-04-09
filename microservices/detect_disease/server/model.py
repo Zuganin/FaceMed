@@ -18,7 +18,7 @@ def load_model():
     device = "mps" if torch.backends.mps.is_available() else "cpu"
 
     # Загружаем модель из указанного пути
-    model = YOLOWorld("microservices/models/Yolo_train_best.pt").to(device)
+    model = YOLOWorld("microservices/detect_disease/models/Yolo_train_best.pt").to(device)
     return model
 
 

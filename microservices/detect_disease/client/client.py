@@ -2,22 +2,21 @@
 import grpc
 
 from bot.config import logger
-from microservices.predict.proto.proto_age import predict_age_pb2
-from microservices.predict.proto.proto_age import predict_age_pb2_grpc
+from microservices.detect_disease.proto_disease import predict_disease_pb2
+from microservices.detect_disease.proto_disease import predict_disease_pb2_grpc
 
 
 def get_predict(image_path):
     """
-        Функция для отправки изображения на сервер для предсказания возраста.
+        Функция для отправки изображения на сервер для диагностики заболевания.
 
         :param image_path: Путь к изображению, которое будет отправлено на сервер
-        :return: Ответ от сервера с результатами предсказания возраста
+        :return: Ответ от сервера с результатами диагностики
     """
     logger.debug("Запуск клиента")
-
-    # Устанавливаем соединение с сервером, расположенным на localhost:50052
-    channel = grpc.insecure_channel('localhost:50052')
-    stub = predict_age_pb2_grpc.PredictAgeStub(channel)
+    # Устанавлcиваем соединение с сервером
+    channel = grpc.insecure_channel('localhost:50051')
+    stub = predict_disease_pb2_grpc.PredictDiseaseStub(channel)
     logger.debug("Соединение с сервером установлено")
 
     # Читаем изображение из файла
@@ -30,12 +29,10 @@ def get_predict(image_path):
 
     logger.debug(f"Отправляем изображение размером {len(image_bytes)} байт")
     # Формируем запрос
-
-    request =  predict_age_pb2.ImageRequest(image_data=image_bytes)
+    request =  predict_disease_pb2.ImageRequest(image_data=image_bytes)
     logger.debug("Отправляем запрос на сервер...")
-
     # Отправляем запрос и получаем ответ
-    response = stub.PredictAge(request)
+    response = stub.DetectDisease(request)
     logger.debug("Ответ получен")
     return  response
 

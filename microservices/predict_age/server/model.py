@@ -1,7 +1,6 @@
 import numpy as np
 from deepface import DeepFace
 import cv2
-import os
 
 from bot.config import logger
 
@@ -27,8 +26,13 @@ def get_predict(request):
     img = get_image(request.image_data)
     logger.debug("Изображение успешно десериализовано")
     # Анализ изображения с DeepFace
-    analysis = DeepFace.analyze(img, actions=['age', 'emotion', 'gender'])
-    return analysis
+    try:
+        analysis = DeepFace.analyze(img, actions=['age', 'gender'], enforce_detection=False)
+        return analysis
+    except ValueError as e:
+        if "Face could not be detected" in str(e):
+            return "❌ Лицо не найдено на изображении"
+
 
 def get_annotation(results, request):
     """
