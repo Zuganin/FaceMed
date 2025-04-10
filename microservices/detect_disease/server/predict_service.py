@@ -18,11 +18,11 @@ class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
 
     def DetectDisease(self, request, context):
         """
-                Метод обработки gRPC-запроса с изображением. Возвращает аннотированное изображение и отчет.
+            Метод обработки gRPC-запроса с изображением. Возвращает аннотированное изображение и отчет.
 
-                :param request: gRPC-запрос, содержащий изображение
-                :param context: Контекст запроса (для обработки ошибок и статусов)
-                :return: DetectionResponse с полями image (аннотированное изображение), report и disease
+            :param request: gRPC-запрос, содержащий изображение
+            :param context: Контекст запроса (для обработки ошибок и статусов)
+            :return: DetectionResponse с полями image (аннотированное изображение), report и disease
         """
         try:
             logger.info("Сервер успешно получил изображение")

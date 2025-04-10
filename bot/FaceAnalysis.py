@@ -135,7 +135,7 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
     result_path = f"{callback.from_user.username}_diagnosis_result.jpg"
 
     if not photo_path:
-        logger.error(f"🆘 Произошло ошибка при анализе возраста. Возможно фото не было загружено.")
+        logger.error(f"🆘 Произошло ошибка при анализе лица. Возможно фото не было загружено.")
         await callback.message.reply("Сначала отправьте фото.")
         return
 
