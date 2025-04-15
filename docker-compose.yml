@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "50053:50053"
+      - "50553:50053"
     depends_on:
       - postgres
       - predict_age1
@@ -25,7 +25,7 @@ services:
       - GRPC_HOST_LOCAL=0.0.0.0
       - GRPC_PORT=50051
     ports:
-      - "50051:50051"
+      - "50551:50051"
     networks:
       - backend
 
@@ -38,7 +38,7 @@ services:
       - GRPC_HOST_LOCAL=0.0.0.0
       - GRPC_PORT=50052
     ports:
-      - "50052:50052"
+      - "50552:50052"
     networks:
       - backend
 
@@ -49,13 +49,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     restart: on-failure
     networks:
       - backend
-volumes:
-  postgres_data:
+
 
 networks:
   backend:

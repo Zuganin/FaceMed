@@ -30,7 +30,7 @@ class Server_age:
             Запускает сервер на указанном порту.
         """
         self.server.start()
-        logger.info("gRPC сервер запущен на порту 50052")
+        logger.info("gRPC сервер запущен")
 
     def wait(self):
         """

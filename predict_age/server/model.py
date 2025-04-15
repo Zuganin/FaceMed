@@ -27,7 +27,7 @@ def get_predict(request):
     logger.debug("Изображение успешно десериализовано")
     # Анализ изображения с DeepFace
     try:
-        analysis = DeepFace.analyze(img, actions=['age', 'gender'], enforce_detection=False)
+        analysis = DeepFace.analyze(img, actions=['age', 'gender'], enforce_detection=False, detector_backend='retinaface')
         return analysis
     except ValueError as e:
         if "Face could not be detected" in str(e):

@@ -31,7 +31,7 @@ class Server_disease:
             Запускает gRPC-сервер.
         """
         self.server.start()
-        logger.info("gRPC сервер запущен на порту 50051")
+        logger.info("gRPC сервер запущен")
 
     def wait(self):
         """

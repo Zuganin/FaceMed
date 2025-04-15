@@ -13,7 +13,8 @@ class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
         Реализует методы, определенные в .proto файле.
     """
     def __init__(self):
-        self.model = load_model()
+        self.model_acne = load_model("models/detect_acne.pt")
+        self.model_disease = load_model("models/detect_disease.pt")
         logger.info("Модель успешно загружена на сервер")
 
     def DetectDisease(self, request, context):
@@ -25,18 +26,21 @@ class PredictDiseaseServicer(predict_disease_pb2_grpc.PredictDiseaseServicer):
             :return: DetectionResponse с полями image (аннотированное изображение), report и disease
         """
         try:
+
             logger.info("Сервер успешно получил изображение")
-            results = get_predict(self.model, request.image_data)
+            results1 = get_predict(self.model_acne, request.image_data)
+            results2 = get_predict(self.model_disease, request.image_data)
 
             logger.info("Формирование аннотированного изображения и отчета")
-            annotated_bytes = get_annotation(results)
+            annotated_bytes = get_annotation(results1, results2)
+
             # Обработка результатов
-            if len(results[0]) == 0:
+            if len(results1[0]) == 0 and len(results2[0]) == 0:
                 logger.info("Модель не обнаружила никаких симптомов")
                 return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report="Не обнаружено никаких видимых симптомов!", disease="None")
 
-            report = get_report(results)
-            disease = get_disease(results)
+            report = get_report(results1, results2)
+            disease = get_disease(results1, results2)
             return predict_disease_pb2.DetectionResponse(image=annotated_bytes, report=report, disease=disease)
 
         except Exception as e:

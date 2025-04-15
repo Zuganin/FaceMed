@@ -1,3 +1,4 @@
-microservices/detect_disease/models/Yolo_train_best.pt filter=lfs diff=lfs merge=lfs -text
-detect_disease/models/model.pt filter=lfs diff=lfs merge=lfs -text
-detect_disease/models/Yolo_train_best.pt filter=lfs diff=lfs merge=lfs -text
+microservices/detect_disease/models/detect_disease.pt filter=lfs diff=lfs merge=lfs -text
+detect_disease/models/detect_acne.pt filter=lfs diff=lfs merge=lfs -text
+detect_disease/models/detect_disease.pt filter=lfs diff=lfs merge=lfs -text
+readme_files/FaceMed.gif filter=lfs diff=lfs merge=lfs -text

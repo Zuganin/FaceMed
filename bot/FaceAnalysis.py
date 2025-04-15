@@ -62,27 +62,6 @@ async def handle_photo(message: types.Message, state: FSMContext):
         logger.error(f"Ошибка загрузки изображения: {e}")
         await message.reply(f"Ошибка загрузки изображения: {e}")
 
-    #
-    # photo_path = f"{message.from_user.username}_photo.jpg"
-    # logger.info(f"Пользователь {message.from_user.username} отправил фото {photo_path}")
-    # try:
-    #     # Скачиваем фото
-    #     photo = message.photo[-1]
-    #     file_info = await bot.get_file(photo.file_id)
-    #     await bot.download_file(file_info.file_path, photo_path)
-    #
-    #     # Сохраняем путь к фото в состоянии
-    #     await state.update_data(photo_path=photo_path)
-    #
-    #     # Устанавливаем состояние
-    #     await state.set_state(UserActions.photos_processing)
-    #
-    #     # Предлагаем выбрать действие с помощью инлайн-клавиатуры
-    #     await message.answer("Выбери действие:", reply_markup=photoProcessingCommands)
-    #     logger.info(f"Фото успешно скачано. Пользователь {message.from_user.username} выбирает действие.")
-    # except Exception as e:
-    #     logger.error(f"Ошибка загрузки фото: {e}")
-    #     await message.reply(f"Ошибка загрузки изображения: {e}")
 
 
 
@@ -110,9 +89,10 @@ async def analyze_age(callback: types.CallbackQuery, state: FSMContext):
 
     try:
         # Обращение к клиентскому сервису
+        await callback.message.answer("Ваше фото успешно получено. Диагностика займет примерно 1 минуту.")
+
         results = client_age.get_predict(photo_path)
         annotated_photo = results.image
-
         logger.info(f"Пользователь {callback.from_user.username} успешно отправил фото на диагностику.")
 
         # Отправка результата
@@ -163,6 +143,7 @@ async def diagnose_disease(callback: types.CallbackQuery, state: FSMContext):
 
     try:
         # Обращение к клиентскому сервису
+        await callback.message.answer("Ваше фото успешно получено. Диагностика займет примерно 1 минуту.")
 
         results = client_disease.get_predict(photo_path)
         annotated_photo = results.image

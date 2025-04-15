@@ -203,3 +203,4 @@ async def process_gender(callback_query: CallbackQuery, state: FSMContext):
     )
     logger.info(f"✅ Пользователь {callback_query.from_user.full_name} успешно зарегистрирован: {data=}")
     await state.clear()
+
