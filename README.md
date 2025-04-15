@@ -13,7 +13,7 @@ Telegram bot for conducting an express diagnosis of a person’s state according
 2. Detect disease with YOLOv11 [(YOLO)](https://docs.ultralytics.com/ru/models/yolo11/)
 Photos are sent to the gRPC server where it processes the YOLOv11 model 
 3. Obtaining a marked photo
-![annotated_photo]("readme_files/2025-04-23 20.34.09.jpg")
+![annotated_photo](readme_files/2025-04-2320.34.09.jpg)
 
 ---
 
